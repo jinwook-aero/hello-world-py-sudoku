@@ -22,6 +22,7 @@ class Sudoku():
         self.N_element = self.N_size**2 # 81 elements for default
         self.cur_mat = np.copy(init_mat) # np.zeros((N_size*N_size))
         self.N_guess_layer = 0 # Current layer of guess
+        self.N_trial = 0 # Current trial counter
 
         # Sanity check
         assert np.shape(init_mat) == (self.N_size,self.N_size)
@@ -149,15 +150,16 @@ class Sudoku():
         R = Sudoku(self.cur_mat)
         R.cur_mat[n_row,n_col] = val
         R.N_guess_layer = self.N_guess_layer + 1
+        R.N_trial = self.N_trial + 1
         
         return R
         
-    def solve(self,n_guess_limit):
+    def solve(self,n_guess_layer_max,n_trial_max):
         # Guess layer \t
         tStr = ""
         for _ in range(self.N_guess_layer):
             tStr += "."
-
+        
         # Scan update until there is nothing more to change
         is_changed = self._scan()
         while (self.is_valid == True) and (is_changed == True):
@@ -165,27 +167,37 @@ class Sudoku():
         
         # Drill down if valid but not solved
         # - This will be called recursively
-        if ((self.N_guess_layer < n_guess_limit) and 
-            (self.is_valid == True) and
-            (self.is_solved == False)):
+        if ((self.N_guess_layer < n_guess_layer_max) and  # Guess Layer
+            (self.is_valid == True) and # Validity
+            (self.is_solved == False)): # Solved status
             for n_element_fill in self._sort_val_list_size():
                 if np.size(self.val_list[n_element_fill]) == 1:
                     continue
                 else:
                     val_list_fill = self.val_list[n_element_fill]
                     for val in val_list_fill:
-                        n_row_fill = int(n_element_fill/self.N_size)
-                        n_col_fill = np.remainder(n_element_fill,self.N_size)
-                        print(tStr + "Guess: (" + str(n_row_fill) + ", " + str(n_col_fill) + ") = " + str(val))
+                        # Trial limit check
+                        #print(tStr + "Current trial: " + str(self.N_trial))
+                        if self.N_trial  > n_trial_max:
+                            #print(tStr + "Exceeded trial limit")
+                            return
+                        
+                        #n_row_fill = int(n_element_fill/self.N_size)
+                        #n_col_fill = np.remainder(n_element_fill,self.N_size)
+                        #print(tStr + "Guess: (" + str(n_row_fill) + ", " + str(n_col_fill) + ") = " + str(val))
                         R = self._replaced_game(n_element_fill,val)
-                        R.solve(n_guess_limit)
+                        R.solve(n_guess_layer_max,n_trial_max)
+                        self.N_trial = R.N_trial
                         if R.is_valid == False:
                             continue           
                         if R.is_solved == True:
                             self._copy_A2B(R,self)
-                            print(tStr + "Found solution")
+                            #print(tStr + "Found solution")
                             break
-                if self.is_solved == True:
+                    #if self.N_trial  > n_trial_max:
+                    #    print(tStr + "Exceeded trial limit")
+                    #    return
+                if (self.is_solved == True):
                     break
 
     def display(self):

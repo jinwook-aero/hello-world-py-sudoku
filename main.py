@@ -15,7 +15,7 @@ import subprocess
 
 def main(profileName):
     ## Initialize
-    init_array = example(7) # 1, 7, 13, 25
+    init_array = example(25) # 1, 7, 13, 25
     init_mat = np.array(init_array)
 
     cur_game = Sudoku(init_mat)
@@ -26,9 +26,14 @@ def main(profileName):
     print("\nSolver started")
     profiler = cProfile.Profile()
     profiler.enable()
-    for n_guess_limit in range(5):
-        cur_game.solve(n_guess_limit)
-        if cur_game.is_solved:
+
+    # Guess limit
+    for n_guess_layer_max in range(2,8,2):
+        print("Guess layer: " + str(n_guess_layer_max))
+        n_trial_max = 500
+        cur_game.N_trial = 0 # Reset trial count
+        cur_game.solve(n_guess_layer_max,n_trial_max)
+        if cur_game.is_solved == True:
             break
     
     ## Dump profiling
