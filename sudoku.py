@@ -83,13 +83,15 @@ class Sudoku():
                 cur_block_list = self.cur_mat[n_row0:n_rowE,n_col0:n_colE].flatten()
                 cur_row_list = self.cur_mat[n_row,:].flatten()
                 cur_col_list = self.cur_mat[:,n_col].flatten()
+                cur_pre_list = np.concatenate((cur_block_list,
+                                               cur_row_list,
+                                               cur_col_list))
+                cur_pre_uniq = np.unique(cur_pre_list)
                 
                 # Validity
                 if cur_val == 0:
                     # Update validity list
-                    cur_val_list = np.setdiff1d(cur_val_list, cur_block_list)
-                    cur_val_list = np.setdiff1d(cur_val_list, cur_row_list)
-                    cur_val_list = np.setdiff1d(cur_val_list, cur_col_list)
+                    cur_val_list = np.setdiff1d(cur_val_list, cur_pre_uniq, assume_unique=True)
                     
                     if np.size(cur_val_list) != np.size(self.val_list[n_element]):
                         self.val_list[n_element] = cur_val_list

@@ -3,3 +3,6 @@ Reference/
 
 # Ignore python cache
 __pycache__
+
+# Profiling file
+temp.prof
