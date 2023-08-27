@@ -149,12 +149,12 @@ class Sudoku():
         R.N_guess_layer = self.N_guess_layer + 1
         
         return R
-
-    def solve(self):
+        
+    def solve(self,n_guess_limit):
         # Guess layer \t
         tStr = ""
         for _ in range(self.N_guess_layer):
-            tStr += " "
+            tStr += "."
 
         # Scan update until there is nothing more to change
         is_changed = self._scan()
@@ -163,7 +163,9 @@ class Sudoku():
         
         # Drill down if valid but not solved
         # - This will be called recursively
-        if (self.is_valid == True) and (self.is_solved == False):
+        if ((self.N_guess_layer < n_guess_limit) and 
+            (self.is_valid == True) and
+            (self.is_solved == False)):
             for n_element_fill in self._sort_val_list_size():
                 if np.size(self.val_list[n_element_fill]) == 1:
                     continue
@@ -172,16 +174,17 @@ class Sudoku():
                     for val in val_list_fill:
                         n_row_fill = int(n_element_fill/self.N_size)
                         n_col_fill = np.remainder(n_element_fill,self.N_size)
-                        print(tStr + "Guessed: (" + str(n_row_fill) + ", " + str(n_col_fill) + ") = " + str(val))
+                        print(tStr + "Guess: (" + str(n_row_fill) + ", " + str(n_col_fill) + ") = " + str(val))
                         R = self._replaced_game(n_element_fill,val)
-                        R.solve()
+                        R.solve(n_guess_limit)
                         if R.is_valid == False:
-                            print(tStr + "Invalid")
                             continue           
                         if R.is_solved == True:
                             self._copy_A2B(R,self)
                             print(tStr + "Found solution")
                             break
+                if self.is_solved == True:
+                    break
 
     def display(self):
         # Upper line

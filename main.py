@@ -9,13 +9,13 @@ import subprocess
 ## Objective and procedure
 # Set and solve Sudoku
 #
-# Last update: August 26, 2023
+# Last update: August 27, 2023
 # Author: Jinwook Lee
 #
 
 def main():
     ## Initialize
-    init_array = example(13) # 1, 7, 13, 25
+    init_array = example(7) # 1, 7, 13, 25
     init_mat = np.array(init_array)
 
     cur_game = Sudoku(init_mat)
@@ -23,7 +23,10 @@ def main():
     cur_game.display()
 
     print("\nSolver started")
-    cur_game.solve()
+    for n_guess_limit in range(5):
+        cur_game.solve(n_guess_limit)
+        if cur_game.is_solved:
+            break
     
     if cur_game.is_solved:
         print("\nSolved matrix")
