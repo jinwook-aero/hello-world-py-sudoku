@@ -29,7 +29,7 @@ def main(profileName):
 
     # Guess limit
     for n_guess_layer_max in range(2,8,2):
-        print("Guess layer: " + str(n_guess_layer_max))
+        print("\n[Guess layer " + str(n_guess_layer_max) + "]")
         n_trial_max = 500
         cur_game.N_trial = 0 # Reset trial count
         cur_game.solve(n_guess_layer_max,n_trial_max)

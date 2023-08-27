@@ -177,7 +177,8 @@ class Sudoku():
                     val_list_fill = self.val_list[n_element_fill]
                     for val in val_list_fill:
                         # Trial limit check
-                        #print(tStr + "Current trial: " + str(self.N_trial))
+                        if np.remainder(self.N_trial,100)==0:
+                            print(tStr + "Current trial: " + str(self.N_trial))
                         if self.N_trial  > n_trial_max:
                             #print(tStr + "Exceeded trial limit")
                             return
@@ -192,7 +193,7 @@ class Sudoku():
                             continue           
                         if R.is_solved == True:
                             self._copy_A2B(R,self)
-                            #print(tStr + "Found solution")
+                            print(tStr + "Found solution at trial " + str(self.N_trial))
                             break
                     #if self.N_trial  > n_trial_max:
                     #    print(tStr + "Exceeded trial limit")
