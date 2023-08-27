@@ -126,63 +126,62 @@ class Sudoku():
 
         # End
         return is_changed
-            
-    def _random_guess(self):
-        # Serach position with minimum element size
-        is_found = False
-        for cur_size in range(2,self.N_size+1):
-            for n_element in range(self.N_element):
-                if np.size(self.val_list[n_element]) == cur_size:
-                    is_found = True
-                    n_element_found = n_element
-                    val_list_found = self.val_list[n_element]
-                    break
-            if is_found == True:
-                break
+    
+    def _sort_val_list_size(self):
+        # Sorted list of element position
+        # based on size of val_list
 
-        # Current coordinate
-        n_row_found = int(n_element_found/self.N_size)
-        n_col_found = np.remainder(n_element_found,self.N_size)
+        # Array of val_list size
+        val_list_size = np.zeros(self.N_element)
+        for n_element in range(self.N_element):
+            val_list_size[n_element] = np.size(self.val_list[n_element])
 
-        # Pick
-        val_pick = np.random.choice(val_list_found)
+        # Sorted list
+        n_element_list = np.argsort(val_list_size)
+        return n_element_list
+
+    def _replaced_game(self,n_element,val):
+        n_row = int(n_element/self.N_size)
+        n_col = np.remainder(n_element,self.N_size)
         
-        # Generate new game with random guess
         R = Sudoku(self.cur_mat)
-        R.cur_mat[n_row_found,n_col_found] = val_pick
+        R.cur_mat[n_row,n_col] = val
         R.N_guess_layer = self.N_guess_layer + 1
-
+        
         return R
 
     def solve(self):
         # Guess layer \t
         tStr = ""
         for _ in range(self.N_guess_layer):
-            tStr += "\t"
+            tStr += " "
 
         # Scan update until there is nothing more to change
         is_changed = self._scan()
         while (self.is_valid == True) and (is_changed == True):
             is_changed = self._scan()
         
-        # Random guess if not solved
+        # Drill down if valid but not solved
         # - This will be called recursively
-        while self.is_solved == False:
-            if self.is_valid == True:
-                print(tStr + "Random Roll")
-                R = self._random_guess()
-                R.solve()
-                if R.is_valid == False:
-                    print(tStr + "Re-roll upstream")
-                    R = self._random_guess()
-                    R.solve()                
-                if R.is_solved == True:
-                    self._copy_A2B(R,self)
-                    print(tStr + "Found solution")
-                    break
-            else: # self.is_valid == False:
-                print(tStr + "Invalid guess")
-                break
+        if (self.is_valid == True) and (self.is_solved == False):
+            for n_element_fill in self._sort_val_list_size():
+                if np.size(self.val_list[n_element_fill]) == 1:
+                    continue
+                else:
+                    val_list_fill = self.val_list[n_element_fill]
+                    for val in val_list_fill:
+                        n_row_fill = int(n_element_fill/self.N_size)
+                        n_col_fill = np.remainder(n_element_fill,self.N_size)
+                        print(tStr + "Guessed: (" + str(n_row_fill) + ", " + str(n_col_fill) + ") = " + str(val))
+                        R = self._replaced_game(n_element_fill,val)
+                        R.solve()
+                        if R.is_valid == False:
+                            print(tStr + "Invalid")
+                            continue           
+                        if R.is_solved == True:
+                            self._copy_A2B(R,self)
+                            print(tStr + "Found solution")
+                            break
 
     def display(self):
         # Upper line

@@ -1,2 +1,5 @@
 # Ignore reference folder
 Reference/
+
+# Ignore python cache
+__pycache__
