@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import time
@@ -50,15 +51,15 @@ class Sudoku():
     def _copy_A2B(self,A,B):
         ## Copy A to B
         # Basic
-        B.N_block = A.N_block
-        B.N_size = A.N_size
-        B.N_element = A.N_element
-        B.cur_mat = A.cur_mat
+        B.N_block = np.copy(A.N_block)
+        B.N_size = np.copy(A.N_size)
+        B.N_element = np.copy(A.N_element)
+        B.cur_mat = np.copy(A.cur_mat)
 
         # Status flag
-        B.is_valid = A.is_valid
-        B.is_solved = A.is_solved
-        B.val_list = A.val_list
+        B.is_valid = np.copy(A.is_valid)
+        B.is_solved = np.copy(A.is_solved)
+        B.val_list = np.copy(A.val_list)
 
     def _scan(self):
         # Min-max validity check
@@ -156,15 +157,16 @@ class Sudoku():
         return R
         
     def solve(self,n_guess_layer_max,n_trial_max,is_quiet=False):
+        ## Recurvise solver
+        # This method has critical issue to duplicate survey
+
         # Guess layer \t
         tStr = ""
         for _ in range(self.N_guess_layer):
             tStr += "."
         
         # Scan update until there is nothing more to change
-        is_changed = self._scan()
-        while (self.is_valid == True) and (is_changed == True):
-            is_changed = self._scan()
+        self._scan_till_end()
         
         # Drill down if valid but not solved
         # - This will be called recursively
@@ -208,6 +210,112 @@ class Sudoku():
                     #    return
                 if (self.is_solved == True):
                     break
+
+    def _scan_till_end(self):
+        # Call scan until change stops or invalidated
+        is_changed = self._scan()
+        while (self.is_valid == True) and (is_changed == True):
+            is_changed = self._scan()
+
+    def _extract_candidates(self,N_extract):
+        ## Extract combination of element
+        # - In order of val_list size
+        # - Using itertools.combinations(p,q)
+        # - Outputs list of tuples of selected n_element
+
+        # Array of val_list size
+        val_list_size = np.zeros(self.N_element)
+        for n_element in range(self.N_element):
+            val_list_size[n_element] = np.size(self.val_list[n_element])
+
+        # Sorted list
+        val_list_size_sorted = np.sort(val_list_size)
+        n_element_list_sorted = np.argsort(val_list_size)
+
+        # Ignore single size (determined) elements
+        i_unity = val_list_size_sorted == 1
+        n_element_list_sel = n_element_list_sorted[np.invert(i_unity)]
+
+        # Return combinatoric output in list of tuples
+        return list(itertools.combinations(n_element_list_sel,N_extract))
+
+    def solve_comb(self,N_guess,n_trial_max,is_quiet=False):
+        ## Combinatoric solver
+        # - Survey of combinatoric candidate lists for a given guess layer
+        # - Cutoff once trial_max is reached
+        
+        # Scan update until there is nothing more to change
+        self._scan_till_end()
+
+        # Exit if done
+        # Save current case for iteration
+        if ((self.is_valid == False) or # Invalid or
+            (self.is_solved == True)): # Solved
+            return
+        else:
+            init_game = Sudoku(self.cur_mat)
+
+        ## Start to guess if valid but not solved
+        # Candidate pairs
+        #n_element_tuple_list = self._extract_candidates(N_guess)
+        #N_tuple = len(n_element_tuple_list)
+        #for n_tuple in range(N_tuple):
+        #    n_element_tuple = n_element_tuple_list[n_tuple]
+        for n_element_tuple in self._extract_candidates(N_guess):        
+            # Iteration size
+            N_iter = 1
+            val_list_size = np.zeros(N_guess,dtype=int)
+            for n_guess in range(N_guess):
+                val_list_size[n_guess] = np.size(self.val_list[n_element_tuple[n_guess]])
+                N_iter *= val_list_size[n_guess]
+
+            # Iteration
+            for n_iter in range(N_iter):
+                # Update trial count
+                self.N_trial +=  1
+
+                # Index position
+                if n_iter == 0:
+                    index_pos = np.zeros(N_guess,dtype=int)
+                else:
+                    # Click-up
+                    index_pos[0] += 1
+
+                    # Carry
+                    for n_guess in range(N_guess):
+                        if index_pos[n_guess] >= val_list_size[n_guess]:
+                            index_pos[n_guess] = 0
+                            if n_guess < N_guess-1:
+                                index_pos[n_guess+1] += 1
+                
+                # Matrix update
+                for n_guess in range(N_guess):
+                    n_element = n_element_tuple[n_guess]
+                    n_row = int(n_element/self.N_size)
+                    n_col = np.remainder(n_element,self.N_size)
+                    val = self.val_list[n_element][index_pos[n_guess]]
+                    self.cur_mat[n_row,n_col] = val
+                #print(str(n_element_tuple) + " " + str(index_pos))
+                
+                # Scan till end
+                self._scan_till_end()
+
+                # Exit if solved
+                # Reset if not
+                if self.is_solved == True:
+                    return
+                else:
+                    self._copy_A2B(init_game,self)
+
+                # Trial limit check
+                if np.remainder(self.N_trial,100)==0:
+                    if is_quiet == False:
+                        print("Current trial: " + str(self.N_trial))
+                if self.N_trial > n_trial_max:
+                    #print(tStr + "Exceeded trial limit")
+                    return
+        
+        print("Ended survey without solving")
 
     def display(self):
         # Upper line

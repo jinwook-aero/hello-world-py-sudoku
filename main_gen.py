@@ -20,7 +20,7 @@ import subprocess
 class Input():
     # Input class
     def __init__(self):
-        self.N_game = 10
+        self.N_game = 100
         self.N_size = 9
         self.N_element = self.N_size**2
         self.N_seed = 2 # Seed to generate random game

@@ -7,7 +7,7 @@ import cProfile
 import subprocess
 
 ## Objective and procedure
-# Direct solver of Sudoku game
+# Solver for single Sudoku game
 #
 # Last update: August 27, 2023
 # Author: Jinwook Lee
@@ -28,11 +28,13 @@ def main(profileName):
     profiler.enable()
 
     # Guess limit
-    for n_guess_layer_max in range(2,8,2):
+    for n_guess_layer_max in range(0,6,2):
         print("\n[Guess layer " + str(n_guess_layer_max) + "]")
         n_trial_max = 500
+        
         cur_game.N_trial = 0 # Reset trial count
         cur_game.solve(n_guess_layer_max,n_trial_max)
+        #cur_game.solve_comb(n_guess_layer_max,n_trial_max)
         if cur_game.is_solved == True:
             break
     
