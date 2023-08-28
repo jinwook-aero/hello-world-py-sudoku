@@ -23,6 +23,7 @@ class Sudoku():
         self.cur_mat = np.copy(init_mat) # np.zeros((N_size*N_size))
         self.N_guess_layer = 0 # Current layer of guess
         self.N_trial = 0 # Current trial counter
+        self.N_layer_solved = 0 # Layer at solution
 
         # Sanity check
         assert np.shape(init_mat) == (self.N_size,self.N_size)
@@ -154,7 +155,7 @@ class Sudoku():
         
         return R
         
-    def solve(self,n_guess_layer_max,n_trial_max):
+    def solve(self,n_guess_layer_max,n_trial_max,is_quiet=False):
         # Guess layer \t
         tStr = ""
         for _ in range(self.N_guess_layer):
@@ -178,7 +179,8 @@ class Sudoku():
                     for val in val_list_fill:
                         # Trial limit check
                         if np.remainder(self.N_trial,100)==0:
-                            print(tStr + "Current trial: " + str(self.N_trial))
+                            if is_quiet == False:
+                                print(tStr + "Current trial: " + str(self.N_trial))
                         if self.N_trial  > n_trial_max:
                             #print(tStr + "Exceeded trial limit")
                             return
@@ -187,13 +189,19 @@ class Sudoku():
                         #n_col_fill = np.remainder(n_element_fill,self.N_size)
                         #print(tStr + "Guess: (" + str(n_row_fill) + ", " + str(n_col_fill) + ") = " + str(val))
                         R = self._replaced_game(n_element_fill,val)
-                        R.solve(n_guess_layer_max,n_trial_max)
+                        R.solve(n_guess_layer_max,n_trial_max,is_quiet)
                         self.N_trial = R.N_trial
                         if R.is_valid == False:
                             continue           
                         if R.is_solved == True:
                             self._copy_A2B(R,self)
-                            print(tStr + "Found solution at trial " + str(self.N_trial))
+                            if R.N_layer_solved != 0:
+                                # Roll upstream
+                                self.N_layer_solved = R.N_layer_solved
+                            else: # First encounter
+                                self.N_layer_solved = R.N_guess_layer
+                            if is_quiet == False:
+                                print(tStr + "Found solution at trial " + str(self.N_trial))
                             break
                     #if self.N_trial  > n_trial_max:
                     #    print(tStr + "Exceeded trial limit")

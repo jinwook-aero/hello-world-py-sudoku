@@ -7,7 +7,7 @@ import cProfile
 import subprocess
 
 ## Objective and procedure
-# Set and solve Sudoku
+# Direct solver of Sudoku game
 #
 # Last update: August 27, 2023
 # Author: Jinwook Lee

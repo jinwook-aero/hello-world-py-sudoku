@@ -1,6 +1,9 @@
 # Ignore reference folder
 Reference/
 
+# Ignore RandomGames folder
+RandomGames/
+
 # Ignore python cache
 __pycache__
 
